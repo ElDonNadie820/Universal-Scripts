@@ -120,12 +120,3 @@ RunService.RenderStepped:Connect(function()
         end
     end
 end)
-
-StarterGui:SetCore("SendNotification", {
-    Title = "¡Thanks For Use The Script!";
-    Text = "the script is in beta soo the holds will be broken srry";
-    Duration = 5; -- Duración en segundos
-    Callback = function()
-        print(":).")
-    end;
-})
