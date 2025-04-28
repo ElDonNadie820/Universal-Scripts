@@ -1,2 +1,2 @@
-# Universal-Scripts
-Well there i will be uploading universal scripts
+# Game Scriprs
+Well there i will be uploading games scripts
