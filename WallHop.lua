@@ -79,7 +79,7 @@ local function performWallHop()
         task.wait(0)
 
         -- Giro suave después del Wall-Hop
-        rootPart.CFrame = rootPart.CFrame * CFrame.Angles(0, math.rad(-40), 0)
+        rootPart.CFrame = rootPart.CFrame * CFrame.Angles(0, math.rad(-35), 0)
 
         -- Delay para hacer el movimiento más humano
         task.wait(0.4)
