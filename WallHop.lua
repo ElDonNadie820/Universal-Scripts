@@ -1,5 +1,4 @@
 local Players = game:GetService("Players")
-local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
@@ -9,8 +8,7 @@ local humanoid = character:FindFirstChildOfClass("Humanoid")
 local rootPart = character:FindFirstChild("HumanoidRootPart")
 
 local wallHopEnabled = false
-local dragging = false
-local dragStart, startPos
+local isPerformingWallHop = false
 
 -- Creación de GUI compacta y movible
 local screenGui = Instance.new("ScreenGui")
@@ -27,7 +25,7 @@ frame.Parent = screenGui
 
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, 0, 0, 30)
-titleLabel.Text = "Kai's Wall-Hop"
+titleLabel.Text = "Kai's Automatic Wallhop"
 titleLabel.TextSize = 16
 titleLabel.Font = Enum.Font.SourceSansBold
 titleLabel.BackgroundTransparency = 1
@@ -55,54 +53,42 @@ createButton("Eliminar GUI", 70, function()
     screenGui:Destroy()
 end)
 
--- Hacer la GUI completamente movible
-frame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = frame.Position
-    end
-end)
-
-frame.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - dragStart
-        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
-
-frame.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = false
-    end
-end)
-
--- Wall-Hop y Ladder-Flick automático sin delay, con giro reducido y dirección fija
-local function performWallHop()
-    if not wallHopEnabled then return end
-
+-- Función para detectar una pared frente al jugador
+local function isWallInFront()
     local raycastParams = RaycastParams.new()
     raycastParams.FilterDescendantsInstances = {character}
     raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
 
-    local raycastResult = workspace:Raycast(rootPart.Position, rootPart.CFrame.LookVector * 2, raycastParams)
+    local raycastResult = Workspace:Raycast(rootPart.Position, rootPart.CFrame.LookVector * 2, raycastParams)
     if raycastResult and raycastResult.Instance then
-        humanoid.Jump = true
-        rootPart.Velocity = Vector3.new(0, 60, 0) -- Potencia ajustada para mejor movimiento
-
-        -- Giro más suave y controlado
-        rootPart.CFrame = rootPart.CFrame * CFrame.Angles(0, math.rad(10), 0)
-        RunService.Heartbeat:Wait()
-        rootPart.CFrame = rootPart.CFrame * CFrame.Angles(0, math.rad(-20), 0)
-
-        -- Ajustar la orientación del personaje y cámara hacia adelante
-        local forwardDirection = Vector3.new(rootPart.CFrame.LookVector.X, 0, rootPart.CFrame.LookVector.Z).Unit
-        rootPart.CFrame = CFrame.lookAt(rootPart.Position, rootPart.Position + forwardDirection)
+        return true
     end
+    return false
 end
 
--- Activar Wall-Hop y Ladder-Flick cada vez que el jugador salte cerca de una pared
-UIS.JumpRequest:Connect(function()
+-- Wall-Hop automático con giro después del movimiento
+local function performWallHop()
+    if not wallHopEnabled or isPerformingWallHop then return end
+    isPerformingWallHop = true
+
+    while wallHopEnabled and isWallInFront() do
+        humanoid.Jump = true
+        rootPart.Velocity = Vector3.new(0, 60, 0) -- Potencia ajustada para el Wall-Hop
+
+        -- Esperar antes de girar para que el Wall-Hop se complete
+        task.wait(0)
+
+        -- Giro suave después del Wall-Hop
+        rootPart.CFrame = rootPart.CFrame * CFrame.Angles(0, math.rad(-40), 0)
+
+        -- Delay para hacer el movimiento más humano
+        task.wait(0.4)
+    end
+
+    isPerformingWallHop = false
+end
+
+RunService.Heartbeat:Connect(function()
     if wallHopEnabled then
         performWallHop()
     end
